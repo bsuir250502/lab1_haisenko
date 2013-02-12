@@ -1,1 +1,4 @@
-123123
+#include <stdio.h>
+
+int maint() {
+    return 0; }
