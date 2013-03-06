@@ -2,55 +2,58 @@
 #include <malloc.h>
 #include <stdio_ext.h>
 
-struct marks {
-    int *estimate;
-    int *exam;
-};
-
 struct info {
     char *name;
-    struct marks *sem;
+    int *estimate;
+    int **exam;
+    //int *averageExam;  //or average estimates?
+    //int isModify;
 };
 
 struct group {
     struct info *student;
-    int averageExam;
-    int averageEstimate;
-    int isModify;
     int lastStudent;
-} *list;
+};
 
-int groupMax = 0;
+void inputStruct(struct group*, int*);    //Need I write variables here?
+int inputGroupNum(struct group*, int*);
+int inputName(struct info*, int );
+void inputEstimates(int*);
+void inputExams(int**);
 
-void enter();
-void printAll();
-int search(int minmax);
+void printStruct(struct group*, int*);
+void printStruct(struct group*, int*);
+
+int minmaxAverageVal(struct group*, int, int);
 
 int main()
 {
-    char *action;
-    int EXIT = 1;
+    struct group *list;
     list = (struct group*)malloc(sizeof(struct group));
     list[0].lastStudent = 0;
+    int groupMax = 0;
+    char *action;
+    int EXIT = 1;
 
     action = (char*)malloc(3 * sizeof(char));
 
     while (EXIT) {
+        printf("    %d\n", groupMax);
         printf("Select the action:\n");
         printf("    \\e - Add student\n    \\p - Print all\n    \\x - Search for average min\n    \\n - Search for average max\n    \\q - Exit\n");
         fgets(action, 3, stdin);
 
-        if (*action != '\\') {
+        if (action[0] != '\\') {
             printf("Wrong command, try agan\n\n");
             continue;
         }
 
         switch (action[1]) {
             case 'e':
-                enter();
+                inputStruct(list, &groupMax);
                 break;
             case 'p':
-                printAll();
+                printStruct(list, &groupMax);
                 break;
             case 'x':
                 //printf("Group %d, average: %d", search(0), (list + search(0))->averageExam);
@@ -71,83 +74,118 @@ int main()
     return 0;
 }
 
-void enter()
+void inputStruct(struct group *list, int *groupMax)
 {
-    int groupNum, semNum, studentID, i, est;
+    int groupNum, studentID;
 
-    printf("Enter group:\n");
-    scanf("%d",&groupNum);
-    if (!groupNum) {
-        printf("Error\n");
+    groupNum = inputGroupNum(list, groupMax);
+    if (groupNum < 0) {
         return;
     }
-    if (groupNum > groupMax) {
-        list = (struct group*)realloc(list, sizeof(struct group) * groupNum);
-        for (i = groupMax; i < groupNum; i++) {
-            list[i].student = (struct info*)malloc(sizeof(struct info));
-            list[i].lastStudent = 0;
-        }
-        groupMax = groupNum;
+
+    studentID = inputName(list[groupNum].student, list[groupNum].lastStudent);
+    list[groupNum].lastStudent++;
+
+    inputEstimates(list[groupNum].student[studentID].estimate);
+
+    inputExams(list[groupNum].student[studentID].exam);
+}
+
+int inputGroupNum(struct group *list, int *groupMax)
+{
+    int groupNum;
+
+    printf("Enter group:\n");
+    scanf("%d", &groupNum);
+    if (groupNum < 1) {
+        printf("Error\n");
+        return -1;
     }
-    groupNum--;
+
+    if (groupNum >= *groupMax) {
+        list = (struct group*)realloc(list, groupNum * sizeof(struct group));
+        for (; *groupMax <= groupNum; (*groupMax)++) {
+            list[*groupMax].student = (struct info*)malloc(sizeof(struct info));
+            list[*groupMax].lastStudent = 0;
+        }
+    }
+    return --groupNum;
+}
+
+int inputName(struct info *student, int lastStudent)
+{
+    int studentID = lastStudent++;
+
+    student = (struct info*)realloc(student, lastStudent * sizeof(struct info));
+    student[studentID].name = (char*)malloc(25 * sizeof(char));
 
     printf("Enter name:\n");
-    studentID = list[groupNum].lastStudent++;
-    list[groupNum].student = (struct info*)realloc(list[groupNum].student, sizeof(struct info) * (studentID + 1));
-    list[groupNum].student[studentID].name = (char*)malloc(30 * sizeof(char));
     __fpurge(stdin);
-    fgets(list[groupNum].student[studentID].name, 30, stdin);
+    fgets(student[studentID].name, 25, stdin);
+
+    return studentID;
+}
+
+void inputEstimates(int *estimate)
+{
+    int i, temp;
+    estimate = (int*)malloc(sizeof(int));
 
     printf("Enter estimates, 0 to stop entry:\n");
-    list[groupNum].student[studentID].sem = (struct marks*)malloc(8 * sizeof(struct marks));
-    for (semNum = 0; semNum < 8; semNum++) {
-        list[groupNum].student[studentID].sem[semNum].estimate = (int*)malloc(sizeof(int));
-        printf("    %d semestr: ", semNum + 1);
-        for (i = 1, est = 1; est; i++) {  // <7
-            scanf("%d",&est);
-            list[groupNum].student[studentID].sem[semNum].estimate[i - 1] = est;
-            list[groupNum].student[studentID].sem[semNum].estimate = (int*)realloc(list[groupNum].student[studentID].sem[semNum].estimate, sizeof(int) * i);
-        }
+    for(i = 1, temp = 1; temp; i++) {
+        estimate = (int*)realloc(estimate, i * sizeof(int));
+        scanf("%d", &temp);
+        estimate[i -1] = temp;
     }
+}
+
+void inputExams(int **exam)
+{
+    int semNum, temp, i;
+    exam = (int**)malloc(8 * sizeof(int*));
 
     printf("Enter exams, 0 to stop entry:\n");
     for (semNum = 0; semNum < 8; semNum++) {
-        (((list + groupNum)->student + studentID)->sem + semNum)->exam = (int*)malloc(sizeof(int));
+        exam[semNum] = (int*)malloc(sizeof(int));
+
         printf("    %d semestr: ", semNum + 1);
-        for (i = 1, est = 1; est; i++) {  // <7
-            scanf("%d", &est);
-            list[groupNum].student[studentID].sem[semNum].exam[i - 1] = est;
-            list[groupNum].student[studentID].sem[semNum].exam = (int*)realloc(list[groupNum].student[studentID].sem[semNum].exam, sizeof(int) * i);
+        for (i = 1, temp = 1; temp; i++) {  // <7
+            printf("               ");
+            scanf("%d", &temp);
+            exam[semNum][i - 1] = temp;
+            exam[semNum] = (int*)realloc(exam[semNum], sizeof(int) * i); 
         }
     }
 }
 
-void printAll()
+
+void printStruct(struct group *list, int *groupMax)
 {
-    int currGroup, currID, currSem, i;
-    for (currGroup = 0; currGroup < groupMax; currGroup++) {
-        printf("Group #%d: \n", currGroup + 1);
-        for (currID = 0; currID < (list + currGroup)->lastStudent; currID++) {
-            printf("    %s",((list + currGroup)->student + currID)->name);
-            for (currSem = 0; currSem < 8; currSem++) {
-                printf("        %d semestr: ", currSem + 1);
+    int groupNum, studentID, semNum, i;
 
-                for (i = 0; list[currGroup].student[currID].sem[currSem].estimate[i]; i++) {
-                    printf("%d ", list[currGroup].student[currID].sem[currSem].estimate[i]);
-                }
+    for(groupNum = 0; groupNum < *groupMax; groupNum++){
+        printf("\nGroup #%d: \n", groupNum + 1);
 
-                printf("    exams: ");
-                for (i = 0; list[currGroup].student[currID].sem[currSem].exam[i]; i++) {
-                    printf("%d ", list[currGroup].student[currID].sem[currSem].exam[i]);
+        for (studentID = 0; studentID < list[groupNum].lastStudent; studentID++) {
+            printf("    %s\n", list[groupNum].student[studentID].name);
+
+            printf("        estimates: ");
+            for (i = 0; list[groupNum].student[studentID].estimate[i]; i++) {
+                printf("%d ", list[groupNum].student[studentID].estimate[i]);
+            }
+
+            printf("\n        exams: ");
+            for (semNum = 0; semNum < 8; semNum++) {
+                printf("\n            %d semestr: ", semNum);
+                for (i = 0; list[groupNum].student[studentID].exam[semNum][i]; ++i) {
+                    printf("%d ", list[groupNum].student[studentID].exam[semNum][i]);
                 }
-                printf("\n");
             }
         }
     }
-    printf("\n");
 }
 
-int search(int minmax)
+int minmaxAverageVal(struct group *list, int groupMax, int minmax)
 {
     return 1;
 }
