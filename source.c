@@ -1,191 +1,258 @@
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio_ext.h>
 
-struct info {
-    char *name;
-    int *estimate;
-    int **exam;
-    //int *averageExam;  //or average estimates?
-    //int isModify;
-};
+const int arraySize = 30;
+const int semestrSize = 8;
+const int MAXMARK = 10;
+const int MINMARK = 1;
 
-struct group {
-    struct info *student;
-    int lastStudent;
-};
-
-void inputStruct(struct group*, int*);    //Need I write variables here?
-int inputGroupNum(struct group*, int*);
-int inputName(struct info*, int );
-void inputEstimates(int*);
-void inputExams(int**);
-
-void printStruct(struct group*, int*);
-void printStruct(struct group*, int*);
-
-int minmaxAverageVal(struct group*, int, int);
-
-int main()
+struct students_t
 {
-    struct group *list;
-    list = (struct group*)malloc(sizeof(struct group));
-    list[0].lastStudent = 0;
-    int groupMax = 0;
-    char *action;
-    int EXIT = 1;
+    char *name;
+    int *marks;
+    int **exams;
+    float average;    //for exams
+};
+struct groups_t
+{
+    struct students_t *student;
+    int nextStudent;
+};
 
-    action = (char*)malloc(3 * sizeof(char));
+void addStudent(struct groups_t *group, int *lastGroup);
+int inputGroup(struct groups_t *group, int *lastGroup);
+char *inputName(struct students_t *student, int *nextStudent);
+int *inputMarks(int *marks);
+int **inputExams(int **exams);
+float searchAverage(int **exams);
 
-    while (EXIT) {
-        printf("    %d\n", groupMax);
-        printf("Select the action:\n");
-        printf("    \\e - Add student\n    \\p - Print all\n    \\x - Search for average min\n    \\n - Search for average max\n    \\q - Exit\n");
-        fgets(action, 3, stdin);
+int printAll(struct groups_t *group, int lastGroup);
 
-        if (action[0] != '\\') {
-            printf("Wrong command, try agan\n\n");
-            continue;
-        }
+float searchMinAverage(struct groups_t *group, int lastGroup);
+float searchMaxAverage(struct groups_t *group, int lastGroup);
 
-        switch (action[1]) {
-            case 'e':
-                inputStruct(list, &groupMax);
-                break;
-            case 'p':
-                printStruct(list, &groupMax);
-                break;
-            case 'x':
-                //printf("Group %d, average: %d", search(0), (list + search(0))->averageExam);
-                break;
-            case 'n':
-                //printf("Group %d, average: %d", search(1), (list + search(1))->averageExam);
-                break;
-            case 'q':
-                EXIT = 0;
-                break;
-            default:
-                printf("Wrong command, try agan\n\n");
-                break;
-        }
-        __fpurge(stdin);
+void freeAll(struct groups_t *group);
+
+int main(int argc, char *argv[])
+{
+    int i;
+    int lastGroup = 0;
+    float average;
+    char command[arraySize];
+    struct groups_t *group;
+    group = (struct groups_t*)malloc(arraySize * sizeof(struct groups_t));
+    for (i = 0; i < arraySize; i++) {
+        group[i].nextStudent = 0;
+        group[i].student = (struct students_t*)malloc(arraySize * sizeof(struct students_t));
     }
 
+    while (1) {
+        printf("\nSelect the action:\n");
+        printf("    \\e - Add student\n    \\p - Print all\n    \\x - Search for average min\n    \\n - Search for average max\n    \\q - Exit\n");
+        __fpurge(stdin);
+        fgets(command, arraySize, stdin);
+        if (command[0] != '\\') {
+            printf("Wrong command!\n");
+            continue;
+        }
+        switch (command[1]) {
+            case 'e':
+                addStudent(group, &lastGroup);
+                break;
+            case 'p':
+                if (!(printAll(group, lastGroup))) {
+                    printf("Nothing is entered.\n");
+                }
+                break;
+            case 'x':
+                average = searchMinAverage(group, lastGroup);
+                if (!average) {
+                    printf("Neither exam is not entered.\n");
+                    break;
+                }
+                printf("Min is %0.3f\n", average);
+                break;
+            case 'n':
+                average = searchMaxAverage(group, lastGroup);
+                if (!average) {
+                    printf("Neither exam is not entered.\n");
+                    break;
+                }
+                printf("Max is %0.3f\n", average);
+                break;
+            case 'q':
+                freeAll(group);
+                return 0;
+            default:
+                printf("Wrong command!\n");
+        }
+    }
     return 0;
 }
 
-void inputStruct(struct group *list, int *groupMax)
+void addStudent(struct groups_t *group, int *lastGroup)
 {
-    int groupNum, studentID;
-
-    groupNum = inputGroupNum(list, groupMax);
-    if (groupNum < 0) {
-        return;
-    }
-
-    studentID = inputName(list[groupNum].student, list[groupNum].lastStudent);
-    list[groupNum].lastStudent++;
-
-    inputEstimates(list[groupNum].student[studentID].estimate);
-
-    inputExams(list[groupNum].student[studentID].exam);
+    int groupNum, studentNum;
+    groupNum = inputGroup(group, lastGroup);
+    group[groupNum].student[group[groupNum].nextStudent].name = inputName(group[groupNum].student, &(group[groupNum].nextStudent));
+    studentNum = (group[groupNum].nextStudent)++;
+    group[groupNum].student[studentNum].marks = inputMarks(group[groupNum].student[studentNum].marks);
+    group[groupNum].student[studentNum].exams = inputExams(group[groupNum].student[studentNum].exams);    //maybe need current semestr
+    group[groupNum].student[studentNum].average = searchAverage(group[groupNum].student[studentNum].exams);
 }
-
-int inputGroupNum(struct group *list, int *groupMax)
+int inputGroup(struct groups_t *group, int *lastGroup)
 {
-    int groupNum;
-
-    printf("Enter group:\n");
-    scanf("%d", &groupNum);
-    if (groupNum < 1) {
-        printf("Error\n");
-        return -1;
-    }
-
-    if (groupNum >= *groupMax) {
-        list = (struct group*)realloc(list, groupNum * sizeof(struct group));
-        for (; *groupMax <= groupNum; (*groupMax)++) {
-            list[*groupMax].student = (struct info*)malloc(sizeof(struct info));
-            list[*groupMax].lastStudent = 0;
+    int groupNum, check = 1;
+    do {
+        printf("Enter group number: ");
+        scanf("%d", &groupNum);
+        if (groupNum >= *lastGroup) {
+            *lastGroup = groupNum;
         }
-    }
+        if (groupNum > arraySize) {
+            printf("Error\n");
+            continue;
+        }
+        check = 0;
+    } while (check);
     return --groupNum;
 }
-
-int inputName(struct info *student, int lastStudent)
+char *inputName(struct students_t *student, int *nextStudent)
 {
-    int studentID = lastStudent++;
-
-    student = (struct info*)realloc(student, lastStudent * sizeof(struct info));
-    student[studentID].name = (char*)malloc(25 * sizeof(char));
-
-    printf("Enter name:\n");
+    printf("Enter student's name: ");
+    student[*nextStudent].name = (char*)malloc(arraySize * sizeof(char));
     __fpurge(stdin);
-    fgets(student[studentID].name, 25, stdin);
-
-    return studentID;
+    fgets(student[*nextStudent].name, arraySize, stdin);
+    return student[*nextStudent].name;
 }
-
-void inputEstimates(int *estimate)
+int *inputMarks(int *marks)
 {
-    int i, temp;
-    estimate = (int*)malloc(sizeof(int));
-
-    printf("Enter estimates, 0 to stop entry:\n");
-    for(i = 1, temp = 1; temp; i++) {
-        estimate = (int*)realloc(estimate, i * sizeof(int));
-        scanf("%d", &temp);
-        estimate[i -1] = temp;
+    int i, markInput = 1;
+    printf("Enter marks, 0 to stop: ");
+    marks = (int*)malloc(arraySize * sizeof(int));
+    for (i = 0; i < (arraySize - 1) && markInput; i++) {
+        scanf("%d", &markInput);
+        if (markInput > MAXMARK || markInput < (MINMARK - 1)) {
+            printf("Mark is not valid\n");
+            i--;
+            continue;
+        }
+        marks[i] = markInput;
     }
+    return marks;
 }
-
-void inputExams(int **exam)
+int **inputExams(int **exams)
 {
-    int semNum, temp, i;
-    exam = (int**)malloc(8 * sizeof(int*));
-
-    printf("Enter exams, 0 to stop entry:\n");
-    for (semNum = 0; semNum < 8; semNum++) {
-        exam[semNum] = (int*)malloc(sizeof(int));
-
+    int semNum, j, examInput;
+    printf("Enter exams, 0 to stop:\n");
+    exams = (int**)malloc(semestrSize * sizeof(int*));
+    for (semNum = 0; semNum < semestrSize; semNum++) {
         printf("    %d semestr: ", semNum + 1);
-        for (i = 1, temp = 1; temp; i++) {  // <7
-            printf("               ");
-            scanf("%d", &temp);
-            exam[semNum][i - 1] = temp;
-            exam[semNum] = (int*)realloc(exam[semNum], sizeof(int) * i); 
+        exams[semNum] = (int*)malloc(arraySize * sizeof(int));
+        for (j = 0, examInput = 1; j < (arraySize - 1) && examInput; j++) {
+            scanf("%d", &examInput);
+            if (examInput > MAXMARK || examInput < (MINMARK - 1)) {
+                printf("Mark is not valid\n");
+                j--;
+                continue;
+            }
+            exams[semNum][j] = examInput;
         }
     }
+    return exams;
+}
+float searchAverage(int **exams)
+{
+    int i, j, count = 0, sum = 0;
+    float result;
+    for (i = 0; i < semestrSize; i++) {
+        for (j = 0; exams[i][j]; j++) {
+            sum += exams[i][j];
+            count++;
+        }
+    }
+    if (count == 0) {
+        return 0;
+    }
+    result = (float)sum / (float)count;
+    return result;
 }
 
-
-void printStruct(struct group *list, int *groupMax)
+int printAll(struct groups_t *group, int lastGroup)
 {
-    int groupNum, studentID, semNum, i;
-
-    for(groupNum = 0; groupNum < *groupMax; groupNum++){
-        printf("\nGroup #%d: \n", groupNum + 1);
-
-        for (studentID = 0; studentID < list[groupNum].lastStudent; studentID++) {
-            printf("    %s\n", list[groupNum].student[studentID].name);
-
-            printf("        estimates: ");
-            for (i = 0; list[groupNum].student[studentID].estimate[i]; i++) {
-                printf("%d ", list[groupNum].student[studentID].estimate[i]);
+    int groupNum, studentNum, semNum, i, check = 0;
+    for (groupNum = 0; groupNum < lastGroup; groupNum++) {
+        printf("\nGroup #%d", groupNum + 1);
+        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
+            check = 1;
+            printf("\n    %s", group[groupNum].student[studentNum].name);
+            printf("        marks: ");
+            for (i = 0; group[groupNum].student[studentNum].marks[i]; i++) {
+                printf("%d ", group[groupNum].student[studentNum].marks[i]);
             }
-
-            printf("\n        exams: ");
-            for (semNum = 0; semNum < 8; semNum++) {
-                printf("\n            %d semestr: ", semNum);
-                for (i = 0; list[groupNum].student[studentID].exam[semNum][i]; ++i) {
-                    printf("%d ", list[groupNum].student[studentID].exam[semNum][i]);
+            printf("\n        exams:");
+            for (semNum = 0; semNum < semestrSize; semNum++) {
+                printf("\n            semestr #%d: ", semNum);
+                for (i = 0; group[groupNum].student[studentNum].exams[semNum][i]; i++) {
+                    printf("%d ", group[groupNum].student[studentNum].exams[semNum][i]);
                 }
             }
         }
     }
+    return check;
 }
 
-int minmaxAverageVal(struct group *list, int groupMax, int minmax)
+float searchMinAverage(struct groups_t *group, int lastGroup)
 {
-    return 1;
+    int groupNum, studentNum;
+    float tempMin = MAXMARK + 1;
+    for (groupNum = 0; groupNum < lastGroup; groupNum++) {
+        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
+            if (group[groupNum].student[studentNum].average == 0) {
+                continue;
+            }
+            if (group[groupNum].student[studentNum].average < tempMin) {
+                tempMin = group[groupNum].student[studentNum].average;
+            }
+        }
+    }
+    if (tempMin == MAXMARK + 1) {
+        return 0;
+    }
+    return tempMin;
+}
+
+float searchMaxAverage(struct groups_t *group, int lastGroup)
+{
+    int groupNum, studentNum;
+    float tempMax = MINMARK - 1;
+    for (groupNum = 0; groupNum < lastGroup; groupNum++) {
+        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
+            if (group[groupNum].student[studentNum].average == 0) {
+                continue;
+            }
+            if (group[groupNum].student[studentNum].average > tempMax) {
+                tempMax = group[groupNum].student[studentNum].average;
+            }
+        }
+    }
+    return tempMax;
+}
+
+void freeAll(struct groups_t *group)
+{
+    int groupNum, studentNum, semNum;
+    for (groupNum = 0; groupNum < arraySize; groupNum++) {
+        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
+            free(group[groupNum].student[studentNum].name);
+            free(group[groupNum].student[studentNum].marks);
+            for (semNum = 0; semNum < semestrSize; semNum++) {
+                free(group[groupNum].student[studentNum].exams[semNum]);
+            }
+            free(group[groupNum].student[studentNum].exams);
+        }
+        free(group[groupNum].student);
+    }
+    free(group);
 }
