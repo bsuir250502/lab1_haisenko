@@ -12,8 +12,9 @@ struct students_t
     char *name;
     int *marks;
     int **exams;
-    float average;    //for exams
+    float average;    /*for exams*/
 };
+
 struct groups_t
 {
     struct students_t *student;
@@ -98,41 +99,58 @@ void addStudent(struct groups_t *group, int *lastGroup)
     group[groupNum].student[group[groupNum].nextStudent].name = inputName(group[groupNum].student, &(group[groupNum].nextStudent));
     studentNum = (group[groupNum].nextStudent)++;
     group[groupNum].student[studentNum].marks = inputMarks(group[groupNum].student[studentNum].marks);
-    group[groupNum].student[studentNum].exams = inputExams(group[groupNum].student[studentNum].exams);    //maybe need current semestr
+    group[groupNum].student[studentNum].exams = inputExams(group[groupNum].student[studentNum].exams);    /*maybe need current semestr*/
     group[groupNum].student[studentNum].average = searchAverage(group[groupNum].student[studentNum].exams);
 }
+
 int inputGroup(struct groups_t *group, int *lastGroup)
 {
-    int groupNum, check = 1;
+    int groupNum;
     do {
         printf("Enter group number: ");
-        scanf("%d", &groupNum);
+        if (!scanf("%d", &groupNum)) {
+            printf("Wrong number.\n");
+            __fpurge(stdin);
+            continue;
+        }
+        if (groupNum > arraySize || groupNum < 1) {
+            printf("Wrong number.\n");
+            continue;
+        }
         if (groupNum >= *lastGroup) {
             *lastGroup = groupNum;
         }
-        if (groupNum > arraySize) {
-            printf("Error\n");
-            continue;
-        }
-        check = 0;
-    } while (check);
+        break;
+    } while (1);
     return --groupNum;
 }
+
 char *inputName(struct students_t *student, int *nextStudent)
 {
-    printf("Enter student's name: ");
     student[*nextStudent].name = (char*)malloc(arraySize * sizeof(char));
-    __fpurge(stdin);
-    fgets(student[*nextStudent].name, arraySize, stdin);
+    do {
+        printf("Enter student's name: ");
+        __fpurge(stdin);
+        fgets(student[*nextStudent].name, arraySize, stdin);
+        if (student[*nextStudent].name[0] == '\n') {
+            continue;
+        }
+        break;
+    } while (1);
     return student[*nextStudent].name;
 }
+
 int *inputMarks(int *marks)
 {
     int i, markInput = 1;
     printf("Enter marks, 0 to stop: ");
     marks = (int*)malloc(arraySize * sizeof(int));
     for (i = 0; i < (arraySize - 1) && markInput; i++) {
-        scanf("%d", &markInput);
+        if (!scanf("%d", &markInput)) {
+            printf("Error\n");
+            __fpurge(stdin);
+            continue;
+        }
         if (markInput > MAXMARK || markInput < (MINMARK - 1)) {
             printf("Mark is not valid\n");
             i--;
@@ -142,6 +160,7 @@ int *inputMarks(int *marks)
     }
     return marks;
 }
+
 int **inputExams(int **exams)
 {
     int semNum, j, examInput;
@@ -151,7 +170,11 @@ int **inputExams(int **exams)
         printf("    %d semestr: ", semNum + 1);
         exams[semNum] = (int*)malloc(arraySize * sizeof(int));
         for (j = 0, examInput = 1; j < (arraySize - 1) && examInput; j++) {
-            scanf("%d", &examInput);
+            if (!scanf("%d", &examInput)) {
+                printf("Error\n");
+                __fpurge(stdin);
+                continue;
+            }
             if (examInput > MAXMARK || examInput < (MINMARK - 1)) {
                 printf("Mark is not valid\n");
                 j--;
@@ -162,6 +185,7 @@ int **inputExams(int **exams)
     }
     return exams;
 }
+
 float searchAverage(int **exams)
 {
     int i, j, count = 0, sum = 0;
