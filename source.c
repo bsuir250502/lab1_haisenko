@@ -30,8 +30,8 @@ float searchAverage(int **exams, int *examsSize);
 
 int printAll(struct groups_t *group, int lastGroup);
 
-float searchMinAverage(struct groups_t *group, int lastGroup);
-float searchMaxAverage(struct groups_t *group, int lastGroup);
+float searchMinAverageExam(struct groups_t *group, int lastGroup);
+float searchMaxAverageExam(struct groups_t *group, int lastGroup);
 
 void freeAll(struct groups_t *group);
 
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
             }
             break;
         case 'x':
-            average = searchMinAverage(group, lastGroup);
+            average = searchMinAverageExam(group, lastGroup);
             if (!average) {
                 printf("Neither exam is not entered.\n");
                 break;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
             printf("Min is %0.3f\n", average);
             break;
         case 'n':
-            average = searchMaxAverage(group, lastGroup);
+            average = searchMaxAverageExam(group, lastGroup);
             if (!average) {
                 printf("Neither exam is not entered.\n");
                 break;
@@ -227,7 +227,7 @@ int printAll(struct groups_t *group, int lastGroup)
     return check;
 }
 
-float searchMinAverage(struct groups_t *group, int lastGroup)
+float searchMinAverageExam(struct groups_t *group, int lastGroup)
 {
     int groupNum, studentNum;
     float tempMin = MAXMARK + 1;
@@ -247,7 +247,7 @@ float searchMinAverage(struct groups_t *group, int lastGroup)
     return tempMin;
 }
 
-float searchMaxAverage(struct groups_t *group, int lastGroup)
+float searchMaxAverageExam(struct groups_t *group, int lastGroup)
 {
     int groupNum, studentNum;
     float tempMax = MINMARK - 1;
