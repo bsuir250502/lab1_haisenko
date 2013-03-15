@@ -22,7 +22,7 @@ struct groups_t {
 };
 
 void addStudent(struct groups_t *group, int *lastGroup);
-int inputGroup(struct groups_t *group, int *lastGroup);
+int inputGroup(int *lastGroup);
 char *inputName(struct students_t *student, int *nextStudent);
 int inputMarks(int *marks);
 void inputExams(int **exams, int *examsSize);
@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
 
     while (1) {
         printf("\nSelect the action:\n");
-        printf("    \\e - Add student\n    \\p - Print all\n    \\x - Search for average min\n    \\n - Search for average max\n    \\q - Exit\n");
-        __fpurge(stdin);
+        printf("    \\e - Add student\n    \\p - Print all\n    \\x - Search for average min\n");
+        printf("    \\n - Search for average max\n    \\q - Exit\n");
         fgets(command, arraySize, stdin);
         if (command[0] != '\\') {
             printf("Wrong command!\n");
@@ -95,12 +95,13 @@ int main(int argc, char *argv[])
 void addStudent(struct groups_t *group, int *lastGroup)
 {
     int groupNum, studentNum, semNum;
-    groupNum = inputGroup(group, lastGroup);
+    groupNum = inputGroup(lastGroup);
     group[groupNum].student[group[groupNum].nextStudent].name = 
         inputName(group[groupNum].student, &(group[groupNum].nextStudent));
     studentNum = (group[groupNum].nextStudent)++;
 
     group[groupNum].student[studentNum].marks = (int *)malloc(arraySize * sizeof(int));
+    printf("Enter marks: ");
     group[groupNum].student[studentNum].marksSize = inputMarks(group[groupNum].student[studentNum].marks);
 
     group[groupNum].student[studentNum].exams = (int **)malloc(semestrSize * sizeof(int*));
@@ -114,26 +115,23 @@ void addStudent(struct groups_t *group, int *lastGroup)
         searchAverage(group[groupNum].student[studentNum].exams, group[groupNum].student[studentNum].examsSize);
 }
 
-int inputGroup(struct groups_t *group, int *lastGroup)
+int inputGroup(int *lastGroup)
 {
     int groupNum;
+    char groupStr[arraySize];
     do {
         printf("Enter group number: ");
-        if (!scanf("%d", &groupNum)) {
-            printf("Wrong number.\n");
-            __fpurge(stdin);
-            continue;
-        }
+        fgets(groupStr, arraySize, stdin);
+        groupNum = atoi(groupStr);
         if (groupNum > arraySize || groupNum < 1) {
             printf("Wrong number.\n");
             continue;
         }
-        if (groupNum >= *lastGroup) {
-            *lastGroup = groupNum;
-        }
         break;
     } while (1);
-    __fpurge(stdin);
+    if (groupNum >= *lastGroup) {
+    *lastGroup = groupNum;
+    }
     return --groupNum;
 }
 
@@ -158,7 +156,6 @@ int inputMarks(int *marks)
     char *marksStr, *buffer;
     buffer = (char *)malloc(arraySize * sizeof(char));
     marksStr = buffer;
-    printf("Enter marks: ");
     do {
         __fpurge(stdin);
         fgets(marksStr, arraySize, stdin);
