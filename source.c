@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdio_ext.h>
- 
+
 const int arraySize = 30;
 const int semestrSize = 8;
 const int MAXMARK = 10;
@@ -13,7 +13,7 @@ struct students_t {
     int marksSize;
     int **exams;
     int *examsSize;
-    float average;  /*for exams*/
+    float average;              /*for exams */
 };
 
 struct groups_t {
@@ -42,10 +42,10 @@ int main(int argc, char *argv[])
     float average;
     char command[arraySize];
     struct groups_t *group;
-    group = (struct groups_t*)malloc(arraySize * sizeof(struct groups_t));
+    group = (struct groups_t *) malloc(arraySize * sizeof(struct groups_t));
     for (i = 0; i < arraySize; i++) {
         group[i].nextStudent = 0;
-        group[i].student = (struct students_t*)malloc(arraySize * sizeof(struct students_t));
+        group[i].student = (struct students_t *) malloc(arraySize * sizeof(struct students_t));
     }
 
     while (1) {
@@ -96,23 +96,21 @@ void addStudent(struct groups_t *group, int *lastGroup)
 {
     int groupNum, studentNum, semNum;
     groupNum = inputGroup(lastGroup);
-    group[groupNum].student[group[groupNum].nextStudent].name = 
-        inputName(group[groupNum].student, &(group[groupNum].nextStudent));
+    group[groupNum].student[group[groupNum].nextStudent].name = inputName(group[groupNum].student, &(group[groupNum].nextStudent));
     studentNum = (group[groupNum].nextStudent)++;
 
-    group[groupNum].student[studentNum].marks = (int *)malloc(arraySize * sizeof(int));
+    group[groupNum].student[studentNum].marks = (int *) malloc(arraySize * sizeof(int));
     printf("Enter marks: ");
     group[groupNum].student[studentNum].marksSize = inputMarks(group[groupNum].student[studentNum].marks);
 
-    group[groupNum].student[studentNum].exams = (int **)malloc(semestrSize * sizeof(int*));
-    group[groupNum].student[studentNum].examsSize = (int *)malloc(arraySize * sizeof(int));
+    group[groupNum].student[studentNum].exams = (int **) malloc(semestrSize * sizeof(int *));
+    group[groupNum].student[studentNum].examsSize = (int *) malloc(arraySize * sizeof(int));
     for (semNum = 0; semNum < semestrSize; semNum++) {
-        group[groupNum].student[studentNum].exams[semNum] = (int *)malloc(arraySize * sizeof(int));
+        group[groupNum].student[studentNum].exams[semNum] = (int *) malloc(arraySize * sizeof(int));
     }
     inputExams(group[groupNum].student[studentNum].exams, group[groupNum].student[studentNum].examsSize);
 
-    group[groupNum].student[studentNum].average = 
-        searchAverage(group[groupNum].student[studentNum].exams, group[groupNum].student[studentNum].examsSize);
+    group[groupNum].student[studentNum].average = searchAverage(group[groupNum].student[studentNum].exams, group[groupNum].student[studentNum].examsSize);
 }
 
 int inputGroup(int *lastGroup)
@@ -130,14 +128,14 @@ int inputGroup(int *lastGroup)
         break;
     } while (1);
     if (groupNum >= *lastGroup) {
-    *lastGroup = groupNum;
+        *lastGroup = groupNum;
     }
     return --groupNum;
 }
 
 char *inputName(struct students_t *student, int *nextStudent)
 {
-    student[*nextStudent].name = (char *)malloc(arraySize * sizeof(char));
+    student[*nextStudent].name = (char *) malloc(arraySize * sizeof(char));
     do {
         printf("Enter student's name: ");
         __fpurge(stdin);
@@ -154,12 +152,12 @@ int inputMarks(int *marks)
 {
     int i, check = 1;
     char *marksStr, *buffer;
-    buffer = (char *)malloc(arraySize * sizeof(char));
+    buffer = (char *) malloc(arraySize * sizeof(char));
     marksStr = buffer;
     do {
         __fpurge(stdin);
         fgets(marksStr, arraySize, stdin);
-        for (i = 0; ; i++) {
+        for (i = 0;; i++) {
             while (marksStr[0] == ' ') {
                 marksStr++;
             }
@@ -201,7 +199,7 @@ float searchAverage(int **exams, int *examsSize)
     if (count == 0) {
         return 0;
     }
-    result = (float)sum / (float)count;
+    result = (float) sum / (float) count;
     return result;
 }
 
