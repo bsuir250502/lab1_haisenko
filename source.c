@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdio_ext.h>
+#include <string.h>
 
 const int arraySize = 30;
 const int semestrSize = 8;
@@ -34,9 +35,11 @@ float searchMinAverageExam(struct groups_t *group, int lastGroup);
 float searchMaxAverageExam(struct groups_t *group, int lastGroup);
 
 void freeAll(struct groups_t *group);
+void checkHelp(char **argc);
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
+    checkHelp(argv);
     int i;
     int lastGroup = 0;
     float average;
@@ -280,4 +283,28 @@ void freeAll(struct groups_t *group)
         free(group[groupNum].student);
     }
     free(group);
+}
+
+void checkHelp(char **argc)
+{
+    if (!argc[1]) {
+        return;
+    }
+    if (!strcmp(argc[1], "-h")) {
+        printf("================================================================================\n\n");
+        printf("                                     MANUAL:\n\n");
+        printf("\\e - Structure input\n");
+        printf("    1) Enter the group number. Number must be > 0 and < 30\n");
+        printf("    2) Enter the name of the student. The name must not be an empty string.\n");
+        printf("    3) Enter marks through spaces. Marks should be integers from 1 to 10. ");
+        printf("If marks are missing, enter an empty string.\n");
+        printf("    4) Enter semester exams. Same as marks.\n\n");
+        printf("\\p - Print whole structure.\n");
+        printf("    Displays all entries.\n\n");
+        printf("\\x - Searching for the maximum average of exam\n");
+        printf("    Displays the maximum average of exams.\n\n");
+        printf("\\n - Searching for the minimum average of exam\n");
+        printf("    Displays the minimum average of exams.\n\n");
+        printf("================================================================================\n");
+    }
 }
