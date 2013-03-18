@@ -35,7 +35,7 @@ float searchMinAverageExam(struct groups_t *group, int lastGroup);
 float searchMaxAverageExam(struct groups_t *group, int lastGroup);
 
 void freeAll(struct groups_t *group);
-void checkHelp(char **argc);
+void checkHelp(char **argv);
 
 int main(int argc, char **argv)
 {
@@ -285,26 +285,29 @@ void freeAll(struct groups_t *group)
     free(group);
 }
 
-void checkHelp(char **argc)
+void checkHelp(char **argv)
 {
-    if (!argc[1]) {
+    if (!argv[1]) {
         return;
     }
-    if (!strcmp(argc[1], "-h")) {
-        printf("================================================================================\n\n");
-        printf("                                     MANUAL:\n\n");
-        printf("\\e - Structure input\n");
-        printf("    1) Enter the group number. Number must be > 0 and < 30\n");
-        printf("    2) Enter the name of the student. The name must not be an empty string.\n");
-        printf("    3) Enter marks through spaces. Marks should be integers from 1 to 10. ");
-        printf("If marks are missing, enter an empty string.\n");
-        printf("    4) Enter semester exams. Same as marks.\n\n");
-        printf("\\p - Print whole structure.\n");
-        printf("    Displays all entries.\n\n");
-        printf("\\x - Searching for the maximum average of exam\n");
-        printf("    Displays the maximum average of exams.\n\n");
-        printf("\\n - Searching for the minimum average of exam\n");
-        printf("    Displays the minimum average of exams.\n\n");
-        printf("================================================================================\n");
+    if (!strcmp(argv[1], "-h")) {
+        printf("================================================================================\n"
+               "                                     MANUAL:\n\n"
+               "Commands: \\e \\p \\x \\n \\q\n\n"
+               "\\e - Structure input\n"
+               "    1) Enter the group number. Number must be > 0 and < 30\n"
+               "    2) Enter the name of the student. The name must not be an empty string.\n"
+               "    3) Enter marks through spaces. Marks should be integers from 1 to 10. "
+               "If marks are missing, enter an empty string.\n"
+               "    4) Enter semester exams. Same as marks.\n\n"
+               "\\p - Print whole structure.\n"
+               "    Displays all entries.\n\n"
+               "\\x - Searching for the maximum average of exam\n"
+               "    Displays the maximum average of exams.\n\n"
+               "\\n - Searching for the minimum average of exam\n"
+               "    Displays the minimum average of exams.\n\n"
+               "\\q - Exit\n"
+               "    Close the program.\n"
+               "================================================================================\n");
     }
 }
