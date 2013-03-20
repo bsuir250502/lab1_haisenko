@@ -24,9 +24,9 @@ struct groups_t {
 
 void addStudent(struct groups_t *group, int *lastGroup);
 int inputGroup(int *lastGroup);
-char *inputName(struct students_t *student, int *nextStudent);
+char *inputName();
 int inputMarks(int *marks);
-void inputExams(int **exams, int *examsSize);
+int *inputExams(int **exams);
 float searchAverage(int **exams, int *examsSize);
 
 int printAll(struct groups_t *group, int lastGroup);
@@ -97,58 +97,54 @@ int main(int argc, char **argv)
 
 void addStudent(struct groups_t *group, int *lastGroup)
 {
-    int groupNum, studentNum, semNum;
-    groupNum = inputGroup(lastGroup);
-    group[groupNum].student[group[groupNum].nextStudent].name = inputName(group[groupNum].student, &(group[groupNum].nextStudent));
-    studentNum = (group[groupNum].nextStudent)++;
+    int grNum, studNum;
+    grNum = inputGroup(lastGroup);
+    group[grNum].student[group[grNum].nextStudent].name = inputName();
+    studNum = (group[grNum].nextStudent)++;
 
-    group[groupNum].student[studentNum].marks = (int *) malloc(arraySize * sizeof(int));
     printf("Enter marks: ");
-    group[groupNum].student[studentNum].marksSize = inputMarks(group[groupNum].student[studentNum].marks);
+    group[grNum].student[studNum].marks = (int *) malloc(arraySize * sizeof(int));
+    group[grNum].student[studNum].marksSize = inputMarks(group[grNum].student[studNum].marks);
 
-    group[groupNum].student[studentNum].exams = (int **) malloc(semestrSize * sizeof(int *));
-    group[groupNum].student[studentNum].examsSize = (int *) malloc(arraySize * sizeof(int));
-    for (semNum = 0; semNum < semestrSize; semNum++) {
-        group[groupNum].student[studentNum].exams[semNum] = (int *) malloc(arraySize * sizeof(int));
-    }
-    inputExams(group[groupNum].student[studentNum].exams, group[groupNum].student[studentNum].examsSize);
-
-    group[groupNum].student[studentNum].average = searchAverage(group[groupNum].student[studentNum].exams, group[groupNum].student[studentNum].examsSize);
+    group[grNum].student[studNum].exams = (int **) malloc(semestrSize * sizeof(int *));
+    group[grNum].student[studNum].examsSize = inputExams(group[grNum].student[studNum].exams);
+    group[grNum].student[studNum].average = searchAverage(group[grNum].student[studNum].exams, group[grNum].student[studNum].examsSize);
 }
 
 int inputGroup(int *lastGroup)
 {
-    int groupNum;
+    int grNum;
     char groupStr[arraySize];
     do {
         printf("Enter group number: ");
         fgets(groupStr, arraySize, stdin);
-        groupNum = atoi(groupStr);
-        if (groupNum > arraySize || groupNum < 1) {
+        grNum = atoi(groupStr);
+        if (grNum > arraySize || grNum < 1) {
             printf("Wrong number.\n");
             continue;
         }
         break;
     } while (1);
-    if (groupNum >= *lastGroup) {
-        *lastGroup = groupNum;
+    if (grNum >= *lastGroup) {
+        *lastGroup = grNum;
     }
-    return --groupNum;
+    return --grNum;
 }
 
-char *inputName(struct students_t *student, int *nextStudent)
+char *inputName()
 {
-    student[*nextStudent].name = (char *) malloc(arraySize * sizeof(char));
+    char *buffer;
+    buffer = (char *) malloc(arraySize * sizeof(char));
     do {
         printf("Enter student's name: ");
         __fpurge(stdin);
-        fgets(student[*nextStudent].name, arraySize, stdin);
-        if (student[*nextStudent].name[0] == '\n') {
+        fgets(buffer, arraySize, stdin);
+        if (buffer[0] == '\n') {
             continue;
         }
         break;
     } while (1);
-    return student[*nextStudent].name;
+    return buffer;
 }
 
 int inputMarks(int *marks)
@@ -179,14 +175,17 @@ int inputMarks(int *marks)
     return i;
 }
 
-void inputExams(int **exams, int *examsSize)
+int *inputExams(int **exams)
 {
-    int semNum;
+    int semNum, *examsSize;
+    examsSize = (int *) malloc(arraySize * sizeof(int));
     printf("Enter exams:\n");
     for (semNum = 0; semNum < semestrSize; semNum++) {
         printf("    %d semestr: ", semNum + 1);
+        exams[semNum] = (int *) malloc(arraySize * sizeof(int));
         examsSize[semNum] = inputMarks(exams[semNum]);
     }
+    return examsSize;
 }
 
 float searchAverage(int **exams, int *examsSize)
@@ -208,21 +207,21 @@ float searchAverage(int **exams, int *examsSize)
 
 int printAll(struct groups_t *group, int lastGroup)
 {
-    int groupNum, studentNum, semNum, i, check = 0;
-    for (groupNum = 0; groupNum < lastGroup; groupNum++) {
-        printf("\nGroup #%d", groupNum + 1);
-        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
+    int grNum, studNum, semNum, i, check = 0;
+    for (grNum = 0; grNum < lastGroup; grNum++) {
+        printf("\nGroup #%d", grNum + 1);
+        for (studNum = 0; studNum < group[grNum].nextStudent; studNum++) {
             check = 1;
-            printf("\n    %s", group[groupNum].student[studentNum].name);
+            printf("\n    %s", group[grNum].student[studNum].name);
             printf("        marks: ");
-            for (i = 0; i < group[groupNum].student[studentNum].marksSize; i++) {
-                printf("%d ", group[groupNum].student[studentNum].marks[i]);
+            for (i = 0; i < group[grNum].student[studNum].marksSize; i++) {
+                printf("%d ", group[grNum].student[studNum].marks[i]);
             }
             printf("\n        exams:");
             for (semNum = 0; semNum < semestrSize; semNum++) {
                 printf("\n            semestr #%d: ", semNum);
-                for (i = 0; i < group[groupNum].student[studentNum].examsSize[semNum]; i++) {
-                    printf("%d ", group[groupNum].student[studentNum].exams[semNum][i]);
+                for (i = 0; i < group[grNum].student[studNum].examsSize[semNum]; i++) {
+                    printf("%d ", group[grNum].student[studNum].exams[semNum][i]);
                 }
             }
         }
@@ -232,15 +231,15 @@ int printAll(struct groups_t *group, int lastGroup)
 
 float searchMinAverageExam(struct groups_t *group, int lastGroup)
 {
-    int groupNum, studentNum;
+    int grNum, studNum;
     float tempMin = MAXMARK + 1;
-    for (groupNum = 0; groupNum < lastGroup; groupNum++) {
-        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
-            if (group[groupNum].student[studentNum].average == 0) {
+    for (grNum = 0; grNum < lastGroup; grNum++) {
+        for (studNum = 0; studNum < group[grNum].nextStudent; studNum++) {
+            if (group[grNum].student[studNum].average == 0) {
                 continue;
             }
-            if (group[groupNum].student[studentNum].average < tempMin) {
-                tempMin = group[groupNum].student[studentNum].average;
+            if (group[grNum].student[studNum].average < tempMin) {
+                tempMin = group[grNum].student[studNum].average;
             }
         }
     }
@@ -252,15 +251,15 @@ float searchMinAverageExam(struct groups_t *group, int lastGroup)
 
 float searchMaxAverageExam(struct groups_t *group, int lastGroup)
 {
-    int groupNum, studentNum;
+    int grNum, studNum;
     float tempMax = MINMARK - 1;
-    for (groupNum = 0; groupNum < lastGroup; groupNum++) {
-        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
-            if (group[groupNum].student[studentNum].average == 0) {
+    for (grNum = 0; grNum < lastGroup; grNum++) {
+        for (studNum = 0; studNum < group[grNum].nextStudent; studNum++) {
+            if (group[grNum].student[studNum].average == 0) {
                 continue;
             }
-            if (group[groupNum].student[studentNum].average > tempMax) {
-                tempMax = group[groupNum].student[studentNum].average;
+            if (group[grNum].student[studNum].average > tempMax) {
+                tempMax = group[grNum].student[studNum].average;
             }
         }
     }
@@ -269,18 +268,18 @@ float searchMaxAverageExam(struct groups_t *group, int lastGroup)
 
 void freeAll(struct groups_t *group)
 {
-    int groupNum, studentNum, semNum;
-    for (groupNum = 0; groupNum < arraySize; groupNum++) {
-        for (studentNum = 0; studentNum < group[groupNum].nextStudent; studentNum++) {
-            free(group[groupNum].student[studentNum].name);
-            free(group[groupNum].student[studentNum].marks);
-            free(group[groupNum].student[studentNum].examsSize);
+    int grNum, studNum, semNum;
+    for (grNum = 0; grNum < arraySize; grNum++) {
+        for (studNum = 0; studNum < group[grNum].nextStudent; studNum++) {
+            free(group[grNum].student[studNum].name);
+            free(group[grNum].student[studNum].marks);
+            free(group[grNum].student[studNum].examsSize);
             for (semNum = 0; semNum < semestrSize; semNum++) {
-                free(group[groupNum].student[studentNum].exams[semNum]);
+                free(group[grNum].student[studNum].exams[semNum]);
             }
-            free(group[groupNum].student[studentNum].exams);
+            free(group[grNum].student[studNum].exams);
         }
-        free(group[groupNum].student);
+        free(group[grNum].student);
     }
     free(group);
 }
