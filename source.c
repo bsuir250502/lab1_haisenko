@@ -39,7 +39,9 @@ void checkHelp(char **argv);
 
 int main(int argc, char **argv)
 {
-    checkHelp(argv);
+    if (argc > 1) {
+        checkHelp(argv);
+    }
     int i;
     int lastGroup = 0;
     float average;
@@ -286,9 +288,6 @@ void freeAll(struct groups_t *group)
 
 void checkHelp(char **argv)
 {
-    if (!argv[1]) {
-        return;
-    }
     if (!strcmp(argv[1], "-h")) {
         printf("================================================================================\n"
                "                                     MANUAL:\n\n"
