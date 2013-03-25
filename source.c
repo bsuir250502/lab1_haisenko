@@ -2,29 +2,30 @@
 #include <stdlib.h>
 #include <stdio_ext.h>
 #include <string.h>
+#define arraySize 30
 
-const int arraySize = 30;
+/*const int arraySize = 30;*/
 const int semestrSize = 8;
 const int MAXMARK = 10;
 const int MINMARK = 1;
 
 struct students_t {
-    char *name;
+    char name[arraySize];
     int *marks;
     int marksSize;
     int **exams;
     int *examsSize;
-    float average;              /*for exams */
+    float average;
 };
 
 struct groups_t {
-    struct students_t *student;
+    struct students_t student[arraySize];
     int nextStudent;
 };
 
-void addStudent(struct groups_t *group, int *lastGroup);
+void addStudent(struct groups_t *group, int grNum);
 int inputGroup(int *lastGroup);
-char *inputName();
+void inputName(struct students_t *student);
 int inputMarks(int *marks);
 int *inputExams(int **exams);
 float searchAverage(int **exams, int *examsSize);
@@ -42,15 +43,12 @@ int main(int argc, char **argv)
     if (argc > 1) {
         checkHelp(argv);
     }
-    int i;
-    int lastGroup = 0;
+    int i, grNum, lastGroup = 0;
     float average;
     char command[arraySize];
-    struct groups_t *group;
-    group = (struct groups_t *) malloc(arraySize * sizeof(struct groups_t));
+    struct groups_t group[arraySize];
     for (i = 0; i < arraySize; i++) {
         group[i].nextStudent = 0;
-        group[i].student = (struct students_t *) malloc(arraySize * sizeof(struct students_t));
     }
 
     while (1) {
@@ -64,7 +62,8 @@ int main(int argc, char **argv)
         }
         switch (command[1]) {
         case 'e':
-            addStudent(group, &lastGroup);
+            grNum = inputGroup(&lastGroup);
+            addStudent(group, grNum);
             break;
         case 'p':
             if (!(printAll(group, lastGroup))) {
@@ -97,12 +96,11 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void addStudent(struct groups_t *group, int *lastGroup)
+void addStudent(struct groups_t *group, int grNum)
 {
-    int grNum, studNum;
-    grNum = inputGroup(lastGroup);
-    group[grNum].student[group[grNum].nextStudent].name = inputName();
-    studNum = (group[grNum].nextStudent)++;
+    int studNum;
+    studNum = group[grNum].nextStudent;
+    inputName(&group[grNum].student[studNum]);
 
     printf("Enter marks: ");
     group[grNum].student[studNum].marks = (int *) malloc(arraySize * sizeof(int));
@@ -111,6 +109,7 @@ void addStudent(struct groups_t *group, int *lastGroup)
     group[grNum].student[studNum].exams = (int **) malloc(semestrSize * sizeof(int *));
     group[grNum].student[studNum].examsSize = inputExams(group[grNum].student[studNum].exams);
     group[grNum].student[studNum].average = searchAverage(group[grNum].student[studNum].exams, group[grNum].student[studNum].examsSize);
+    group[grNum].nextStudent++;
 }
 
 int inputGroup(int *lastGroup)
@@ -133,20 +132,16 @@ int inputGroup(int *lastGroup)
     return --grNum;
 }
 
-char *inputName()
+void inputName(struct students_t *student)
 {
-    char *buffer;
-    buffer = (char *) malloc(arraySize * sizeof(char));
     do {
         printf("Enter student's name: ");
-        __fpurge(stdin);
-        fgets(buffer, arraySize, stdin);
-        if (buffer[0] == '\n') {
+        fgets(student->name, arraySize, stdin);
+        if (student->name[0] == '\n') {
             continue;
         }
-        break;
+        return;
     } while (1);
-    return buffer;
 }
 
 int inputMarks(int *marks)
@@ -273,7 +268,6 @@ void freeAll(struct groups_t *group)
     int grNum, studNum, semNum;
     for (grNum = 0; grNum < arraySize; grNum++) {
         for (studNum = 0; studNum < group[grNum].nextStudent; studNum++) {
-            free(group[grNum].student[studNum].name);
             free(group[grNum].student[studNum].marks);
             free(group[grNum].student[studNum].examsSize);
             for (semNum = 0; semNum < semestrSize; semNum++) {
@@ -281,9 +275,9 @@ void freeAll(struct groups_t *group)
             }
             free(group[grNum].student[studNum].exams);
         }
-        free(group[grNum].student);
+        //free(group[grNum].student);
     }
-    free(group);
+    //free(group);
 }
 
 void checkHelp(char **argv)
