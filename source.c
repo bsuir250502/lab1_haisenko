@@ -1,20 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdio_ext.h>
 #include <string.h>
 #define arraySize 30
+#define stringSize 30
+#define semestrSize 8
 
-/*const int arraySize = 30;*/
-const int semestrSize = 8;
 const int MAXMARK = 10;
 const int MINMARK = 1;
 
 struct students_t {
-    char name[arraySize];
-    int *marks;
+    char name[stringSize];
+    int marks[arraySize];
     int marksSize;
-    int **exams;
-    int *examsSize;
+    int exams[semestrSize][arraySize];
+    int examsSize[semestrSize];
     float average;
 };
 
@@ -27,15 +26,14 @@ void addStudent(struct groups_t *group, int grNum);
 int inputGroup(int *lastGroup);
 void inputName(struct students_t *student);
 int inputMarks(int *marks);
-int *inputExams(int **exams);
-float searchAverage(int **exams, int *examsSize);
+void inputExams(struct students_t *student);
+float searchAverage(struct students_t student);
 
 int printAll(struct groups_t *group, int lastGroup);
 
 float searchMinAverageExam(struct groups_t *group, int lastGroup);
 float searchMaxAverageExam(struct groups_t *group, int lastGroup);
 
-void freeAll(struct groups_t *group);
 void checkHelp(char **argv);
 
 int main(int argc, char **argv)
@@ -45,7 +43,7 @@ int main(int argc, char **argv)
     }
     int i, grNum, lastGroup = 0;
     float average;
-    char command[arraySize];
+    char command[stringSize];
     struct groups_t group[arraySize];
     for (i = 0; i < arraySize; i++) {
         group[i].nextStudent = 0;
@@ -55,7 +53,7 @@ int main(int argc, char **argv)
         printf("\nSelect the action:\n");
         printf("    \\e - Add student\n    \\p - Print all\n    \\x - Search for average min\n");
         printf("    \\n - Search for average max\n    \\q - Exit\n");
-        fgets(command, arraySize, stdin);
+        fgets(command, stringSize, stdin);
         if (command[0] != '\\') {
             printf("Wrong command!\n");
             continue;
@@ -87,7 +85,6 @@ int main(int argc, char **argv)
             printf("Max is %0.3f\n", average);
             break;
         case 'q':
-            freeAll(group);
             return 0;
         default:
             printf("Wrong command!\n");
@@ -103,22 +100,19 @@ void addStudent(struct groups_t *group, int grNum)
     inputName(&group[grNum].student[studNum]);
 
     printf("Enter marks: ");
-    group[grNum].student[studNum].marks = (int *) malloc(arraySize * sizeof(int));
     group[grNum].student[studNum].marksSize = inputMarks(group[grNum].student[studNum].marks);
-
-    group[grNum].student[studNum].exams = (int **) malloc(semestrSize * sizeof(int *));
-    group[grNum].student[studNum].examsSize = inputExams(group[grNum].student[studNum].exams);
-    group[grNum].student[studNum].average = searchAverage(group[grNum].student[studNum].exams, group[grNum].student[studNum].examsSize);
+    inputExams(&(group[grNum].student[studNum]));
+    group[grNum].student[studNum].average = searchAverage(group[grNum].student[studNum]);
     group[grNum].nextStudent++;
 }
 
 int inputGroup(int *lastGroup)
 {
     int grNum;
-    char groupStr[arraySize];
+    char groupStr[stringSize];
     do {
         printf("Enter group number: ");
-        fgets(groupStr, arraySize, stdin);
+        fgets(groupStr, stringSize, stdin);
         grNum = atoi(groupStr);
         if (grNum > arraySize || grNum < 1) {
             printf("Wrong number.\n");
@@ -136,7 +130,7 @@ void inputName(struct students_t *student)
 {
     do {
         printf("Enter student's name: ");
-        fgets(student->name, arraySize, stdin);
+        fgets(student->name, stringSize, stdin);
         if (student->name[0] == '\n') {
             continue;
         }
@@ -147,21 +141,20 @@ void inputName(struct students_t *student)
 int inputMarks(int *marks)
 {
     int i, check = 1;
-    char *marksStr, *buffer;
+    char *tempPointer, *buffer;
     buffer = (char *) malloc(arraySize * sizeof(char));
-    marksStr = buffer;
+    tempPointer = buffer;
     do {
-        __fpurge(stdin);
-        fgets(marksStr, arraySize, stdin);
+        fgets(tempPointer, arraySize, stdin);
         for (i = 0;; i++) {
-            while (marksStr[0] == ' ') {
-                marksStr++;
+            while (tempPointer[0] == ' ') {
+                tempPointer++;
             }
-            if (!marksStr[1]) {
+            if (!tempPointer[1]) {
                 check = 0;
                 break;
             }
-            marks[i] = strtol(marksStr, &marksStr, 10);
+            marks[i] = strtol(tempPointer, &tempPointer, 10);
             if ((marks[i] < MINMARK) || (marks[i] > MAXMARK)) {
                 printf("Marks are not valid, try again: ");
                 break;
@@ -172,26 +165,23 @@ int inputMarks(int *marks)
     return i;
 }
 
-int *inputExams(int **exams)
+void inputExams(struct students_t *student)
 {
-    int semNum, *examsSize;
-    examsSize = (int *) malloc(arraySize * sizeof(int));
+    int semNum;
     printf("Enter exams:\n");
     for (semNum = 0; semNum < semestrSize; semNum++) {
         printf("    %d semestr: ", semNum + 1);
-        exams[semNum] = (int *) malloc(arraySize * sizeof(int));
-        examsSize[semNum] = inputMarks(exams[semNum]);
+        student->examsSize[semNum] = inputMarks(student->exams[semNum]);
     }
-    return examsSize;
 }
 
-float searchAverage(int **exams, int *examsSize)
+float searchAverage(struct students_t student)
 {
     int i, j, count = 0, sum = 0;
     float result;
     for (i = 0; i < semestrSize; i++) {
-        for (j = 0; j < examsSize[i]; j++) {
-            sum += exams[i][j];
+        for (j = 0; j < student.examsSize[i]; j++) {
+            sum += student.exams[i][j];
             count++;
         }
     }
@@ -261,23 +251,6 @@ float searchMaxAverageExam(struct groups_t *group, int lastGroup)
         }
     }
     return tempMax;
-}
-
-void freeAll(struct groups_t *group)
-{
-    int grNum, studNum, semNum;
-    for (grNum = 0; grNum < arraySize; grNum++) {
-        for (studNum = 0; studNum < group[grNum].nextStudent; studNum++) {
-            free(group[grNum].student[studNum].marks);
-            free(group[grNum].student[studNum].examsSize);
-            for (semNum = 0; semNum < semestrSize; semNum++) {
-                free(group[grNum].student[studNum].exams[semNum]);
-            }
-            free(group[grNum].student[studNum].exams);
-        }
-        //free(group[grNum].student);
-    }
-    //free(group);
 }
 
 void checkHelp(char **argv)
